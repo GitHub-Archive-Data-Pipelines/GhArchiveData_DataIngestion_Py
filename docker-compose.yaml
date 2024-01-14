@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  local_aws_lambda:
+  local-aws-lambda:
     build: .
     ports:
       - '8081:8080'
@@ -13,7 +13,7 @@ services:
       - AWS_USE_PATH_STYLE_ENDPOINT=true
       - DEST_BUCKET_NAME=gh-archive-data-raw
     networks:
-      - gharchivedata_orchestration_airflow_default
+      - oss_gharchivedata_orchestration_airflow_default
       
   minio:
     image: 'minio/minio:latest'
@@ -27,14 +27,29 @@ services:
       - 'minio:/data/minio'
     command: minio server /data/minio --console-address ":9090"
     networks:
-      - gharchivedata_orchestration_airflow_default
+      - oss_gharchivedata_orchestration_airflow_default
+
+  minio-init-buckets:
+    image: minio/mc:latest
+    tty: true 
+    depends_on:
+      - minio
+    entrypoint: > 
+        /bin/sh -c "
+        /usr/bin/mc alias set local http://minio:9000 root password;
+        /usr/bin/mc mb --ignore-existing local/raw;
+        /usr/bin/mc mb --ignore-existing local/processed;
+        /usr/bin/mc mb --ignore-existing local/analytics;
+        " 
+    networks:
+      - oss_gharchivedata_orchestration_airflow_default
 
 volumes:
   minio:
     driver: local
 
 networks:
-  gharchivedata_orchestration_airflow_default:
+  oss_gharchivedata_orchestration_airflow_default:
     external: true
 
 
