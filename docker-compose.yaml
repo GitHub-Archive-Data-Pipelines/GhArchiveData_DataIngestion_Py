@@ -1,0 +1,25 @@
+version: '3'
+services:
+
+  local-aws-lambda:
+    hostname: awslambda
+    restart: unless-stopped
+    build: .
+    ports:
+      - '8082:8080'
+    environment:
+      - AWS_ACCESS_KEY_ID=minio_access_key
+      - AWS_SECRET_ACCESS_KEY=minio_secret_key
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_BUCKET=http://minio:9000 
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - DEST_BUCKET_NAME=gh-archive-data-raw
+    networks:
+      - oss_gharchivedata_orchestration_airflow_default
+
+networks:
+  oss_gharchivedata_orchestration_airflow_default:
+    external: true
+
+
+
